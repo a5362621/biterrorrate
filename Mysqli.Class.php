@@ -1,6 +1,6 @@
 <?php
 
-class Mysql
+class Mysqli
 {
     private $localhost;//数据库host
     private $username;//数据库用户名
@@ -28,7 +28,7 @@ class Mysql
             $this->connectResource = $connectResource;
         }
         if ($dbname) {
-            $this->errorArr = $this->chooseDb($dbname);
+            $this->chooseDb($dbname);
         }
     }
 
@@ -81,8 +81,8 @@ class Mysql
                     }
                     break;
                 case 'all':
-                    if ($this->ret && $tmp = mysqli_fetch_all($this->ret)) {
-                        $res = $tmp;
+                    while ($this->ret && $tmp = mysqli_fetch_all($this->ret,MYSQLI_BOTH)) {
+                        $res[] = $tmp;
                     }
                     break;
 //                    查询字段信息;
@@ -247,12 +247,18 @@ class Mysql
         }
     }
     //不安全
-    /*public function getValue($x)
+    public function getValue($x)
     {
         if(isset($this->$x)){
             return $this->$x;
         }
-
-    }*/
+    }
+    public function connectStatus(){
+        if(count($this->connectErrorArr)===0){
+            return $this->connectResource;
+        }else{
+            return $this->connectErrorArr;
+        }
+    }
 
 }
