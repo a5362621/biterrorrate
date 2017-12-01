@@ -5,17 +5,17 @@
  * Date: 2017/12/1 0001
  * Time: 下午 1:52
  */
-require "Mysqli.class.php";
+require "Mysql.class.php";
 
-$db=new Mysql('localhost','root','root','test');
+$db=new Sqli('localhost','root','root','test');
 //var_dump($db->connectStatus());
 
 $sql='select * from userinfo';
 $res=$db->selectQuery($sql);
 //$res=$db->selectQuery($sql,'one');
 //$res=$db->selectQuery($sql,'row');
-$res=$db->selectQuery($sql,'array');
-//$res=$db->selectQuery($sql,'object');
+//$res=$db->selectQuery($sql,'array');
+$res=$db->selectQuery($sql,'object');
 //$res=$db->selectQuery($sql,'field');
 echo "<pre>";
-print_r($res);
+var_dump($res);
