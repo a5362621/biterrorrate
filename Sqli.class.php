@@ -23,7 +23,7 @@ class Sqli
         $connectResource = @mysqli_connect($this->localhost, $this->username, $this->password);
         //不成功则保存错误值;
         if (!$connectResource) {
-            $this->connectErrorArr = $this->mysqliConnectError();
+            $this->mysqliConnectError();
         } else {
             $this->connectResource = $connectResource;
         }
@@ -38,10 +38,8 @@ class Sqli
         if ($db && preg_match('/^[a-zA-Z][\w_]*[\w]$/', $db)) {
             $this->dbname = $db;
             $res = mysqli_select_db($this->connectResource, $db);
-            if ($res) {
-                return true;
-            } else {
-                return $this->showMysqliError();
+            if (!$res) {
+                $this->mysqliConnectError();
             }
         }
     }
@@ -53,19 +51,15 @@ class Sqli
         $arr = array();
         $arr['errno'] = mysqli_connect_errno();
         $arr['msg'] = mysqli_connect_error();
-        return $arr;
+        $this->connectErrorArr = $arr;
     }
 
-    private function showMysqliError()
-    {
-        return $this->connectErrorArr;
-    }
 
     //查询;
     public function selectQuery($sql, $type = 'assoc')
     {
         $sqlArr = $this->checkSql($sql);
-        if (!$sqlArr['error'] && $sqlArr['type']==='select') {
+        if (!$sqlArr['error'] && $sqlArr['type'] === 'select') {
             $this->ret = mysqli_query($this->connectResource, $sqlArr['sql']);
             $res = array();
             switch ($type) {
@@ -122,7 +116,7 @@ class Sqli
     public function executeQuery($sql)
     {
         $sqlArr = $this->checkSql($sql);
-        if (!$sqlArr['error'] && $sqlArr['type']==='insert'||$sqlArr['type']==='update') {
+        if (!$sqlArr['error'] && $sqlArr['type'] === 'insert' || $sqlArr['type'] === 'update') {
             $this->ret = mysqli_query($this->connectResource, $sqlArr['sql']);
             if ($this->ret && $affected_rows = mysqli_affected_rows($this->connectResource)) {
                 $this->res = array();
@@ -132,7 +126,7 @@ class Sqli
             } else {
                 return mysqli_error_list($this->connectResource);
             }
-        } else if (!$sqlArr['error'] && $sqlArr['type']==='delete') {
+        } else if (!$sqlArr['error'] && $sqlArr['type'] === 'delete') {
             $this->ret = mysqli_query($this->connectResource, $sqlArr['sql']);
             if ($this->ret && $affected_rows = mysqli_affected_rows($this->connectResource)) {
                 $this->res = array();
@@ -151,7 +145,7 @@ class Sqli
      * 数组规格:
      * array(
      * 'field'=>'id,name,age',
-     * 'from'=>'userinfo',
+     * 'tbname'=>'userinfo',
      * 'value'=>'1,jack,12',
      * //或者数组
      * 'value'=>array(
@@ -164,20 +158,20 @@ class Sqli
      * */
     public function insertQuery($arr)
     {
-        $field=$this->strToSql($arr['field'],"`");
-        if(is_array($arr['value'])){
+        $field = $this->strToSql($arr['field'], "`");
+        if (is_array($arr['value'])) {
             //是数组,拼接数组;
-            $values="";
-            foreach($arr['value'] as $k => $v){
-                $values.=$this->strToSql($v,"'")."),(";
+            $values = "";
+            foreach ($arr['value'] as $k => $v) {
+                $values .= $this->strToSql($v, "'")."),(";
             }
-            $values=rtrim($values,"),(");
-        }else {
+            $values = rtrim($values, "),(");
+        } else {
             //不是数组,直接拼接;
             $values = $this->strToSql($arr['value'], "'");
         }
 
-        $tmpsql="INSERT INTO ".$arr['from']." (".$field.") VALUES (".$values.")";
+        $tmpsql = "INSERT INTO ".$arr['tbname']." (".$field.") VALUES (".$values.")";
 //        var_dump($tmpsql);
 //        return $tmpsql;
 
@@ -217,20 +211,22 @@ class Sqli
             case 'insert':
             case 'update':
             case 'delete': {
-                return array('sql'=>$sql_,'type'=>$key,'error'=>false);
+                return array('sql' => $sql_, 'type' => $key, 'error' => false);
             }
                 break;
             default: {
-                return array('error'=>'INCURRECT SQL KEY');
+                return array('error' => 'INCURRECT SQL KEY');
             }
                 break;
         }
     }
+
     /* 字符串转换成sql需要的格式: 加上``或者'' */
-    private function strToSql($str,$separator="'"){
+    private function strToSql($str, $separator = "'")
+    {
         //把  id,name,age,like  转换成  `id`,`name`,`age`,`like`
         //把  1,jack,12,eat     转换成  '1','jack','12','eat'
-        if(strlen($str)>0) {
+        if (strlen($str) > 0) {
             $result = "";
             $tmp = explode(",", $str);
             foreach ($tmp as $key => $value) {
@@ -238,21 +234,24 @@ class Sqli
             }
             $result = rtrim($result, ",");
             return $result;
-        }else{
+        } else {
             return false;
         }
     }
+
     //不安全
-    public function getValue($x)
+    /*public function getValue($x)
     {
-        if(isset($this->$x)){
+        if (isset($this->$x)) {
             return $this->$x;
         }
-    }
-    public function connectStatus(){
-        if(count($this->connectErrorArr)===0){
+    }*/
+    //当前连接状态
+    public function connectStatus()
+    {
+        if (count($this->connectErrorArr) === 0) {
             return $this->connectResource;
-        }else{
+        } else {
             return $this->connectErrorArr;
         }
     }
