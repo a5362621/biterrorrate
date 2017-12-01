@@ -9,8 +9,8 @@ class Mysql
     private $dbname;//数据库库名
     private $connectResource;//数据库连接资源;
     private $connectErrorArr;//数据库连接错误信息;
-    private $ret;
-    private $res;
+    private $ret;//返回的资源变量ret(urn);
+    private $res;//根据资源变量得出的结果res(ult)
 
     public function __construct($localhost, $username, $password, $dbname = '', $charset = 'utf8')
     {
@@ -28,7 +28,7 @@ class Mysql
             $this->connectResource = $connectResource;
         }
         if ($dbname) {
-            $this->errorArr = $this->chooseDb($dbname);
+            $this->chooseDb($dbname);
         }
     }
 
@@ -78,11 +78,6 @@ class Mysql
                 case 'array':
                     while ($this->ret && $tmp = mysqli_fetch_array($this->ret)) {
                         $res[] = $tmp;
-                    }
-                    break;
-                case 'all':
-                    if ($this->ret && $tmp = mysqli_fetch_all($this->ret)) {
-                        $res = $tmp;
                     }
                     break;
 //                    查询字段信息;
@@ -161,7 +156,7 @@ class Mysql
      * 'value'=>array(
      *      '1,jack,12','2,lucy,13','3,jinx,12'....
      *      ),
-     * //end 或者数组
+     * //
      * 'where'=>'id>"12"'
      * );
      * 执行结果:成功返回影响行数,失败返回mysqli_error_list($this->connectResource);
@@ -247,12 +242,18 @@ class Mysql
         }
     }
     //不安全
-    /*public function getValue($x)
+    public function getValue($x)
     {
         if(isset($this->$x)){
             return $this->$x;
         }
-
-    }*/
+    }
+    public function connectStatus(){
+        if(count($this->connectErrorArr)===0){
+            return $this->connectResource;
+        }else{
+            return $this->connectErrorArr;
+        }
+    }
 
 }
