@@ -12,7 +12,7 @@ class Sqli
     private $ret;//返回的资源变量ret(urn);
     private $res;//根据资源变量得出的结果res(ult)
 
-    public function __construct($localhost, $username, $password, $dbname = '', $charset = 'utf8')
+    public function __construct($localhost, $username, $password,$dbname, $charset = 'utf8')
     {
         $this->localhost = $localhost;
         $this->username = $username;
@@ -20,7 +20,7 @@ class Sqli
         $this->charset = $charset;
 
         //尝试连接数据库;
-        $connectResource = @mysqli_connect($this->localhost, $this->username, $this->password);
+        $connectResource = @mysqli_connect($this->localhost, $this->username, $this->password,$dbname);
         //不成功则保存错误值;
         if (!$connectResource) {
             $this->mysqliConnectError();
